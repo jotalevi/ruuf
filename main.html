@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>ruuf_calculeitor</title>
+    <meta name="description" content="Calculadora de paneles solares por M2 de techo">
+    <meta name="author" content="Eros T">
+</head>
+
+<body style="   display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: center;
+                justify-content: space-evenly;
+                align-items: center;">
+
+    <div style="    display: flex;
+                    flex-direction: column;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    justify-content: center;
+                    align-items: flex-start;">
+        <label id='label_pannel_x' for="pannel_x">Ancho panel 10</label>
+        <input type="range" min="1" max="20" value="" id="pannel_x">
+        <label id='label_pannel_y' for="pannel_y">Largo panel 10</label>
+        <input type="range" min="1" max="20" value="" id="pannel_y">
+        <label id='label_ruuf_x' for="ruuf_x">Ancho techo 50</label>
+        <input type="range" min="1" max="100" value="" id="ruuf_x">
+        <label id='label_ruuf_y' for="ruuf_y">Largo techo 50</label>
+        <input type="range" min="1" max="100" value="" id="ruuf_y">
+    </div>
+
+    <canvas id="canvas" width="1000" height="1000" style="border:1px solid lightgrey;">
+        Your browser does not support the HTML5 canvas tag.
+    </canvas>
+    <script>
+
+        const startup = () => {
+            document.playgroudData = {
+                ruuf: { x: 50, y: 50 },
+                pannel: { x: 10, y: 10 },
+                packedPannels: [],
+                canvas: document.getElementById("canvas"),
+                inputs: {
+                    ruuf_x: document.getElementById("ruuf_x"),
+                    ruuf_y: document.getElementById("ruuf_y"),
+                    pannel_x: document.getElementById("pannel_x"),
+                    pannel_y: document.getElementById("pannel_y"),
+                },
+                labels: {
+                    ruuf_x: document.getElementById("label_ruuf_x"),
+                    ruuf_y: document.getElementById("label_ruuf_y"),
+                    pannel_x: document.getElementById("label_pannel_x"),
+                    pannel_y: document.getElementById("label_pannel_y"),
+                },
+            };
+
+            document.playgroudData.inputs.ruuf_x.addEventListener("input", (e) => {
+                document.playgroudData.ruuf.x = e.target.value;
+                document.playgroudData.labels.ruuf_x.innerText = `Ancho techo: ${e.target.value}`;
+
+                calculatePannels();
+            });
+
+            document.playgroudData.inputs.ruuf_y.addEventListener("input", (e) => {
+                document.playgroudData.ruuf.y = e.target.value;
+                document.playgroudData.labels.ruuf_y.innerText = `Largo techo: ${e.target.value}`;
+
+                calculatePannels();
+            });
+
+            document.playgroudData.inputs.pannel_x.addEventListener("input", (e) => {
+                document.playgroudData.pannel.x = e.target.value;
+                document.playgroudData.labels.pannel_x.innerText = `Ancho panel: ${e.target.value}`;
+
+                calculatePannels();
+            });
+
+            document.playgroudData.inputs.pannel_y.addEventListener("input", (e) => {
+                document.playgroudData.pannel.y = e.target.value;
+                document.playgroudData.labels.pannel_y.innerText = `Largo panel: ${e.target.value}`;
+
+                calculatePannels();
+            });
+
+            calculatePannels();
+        }
+
+
+        const display = () => {
+            let scale = 7.5
+            let ctx = document.playgroudData.canvas.getContext("2d");
+
+            let ruufWidth = document.playgroudData.ruuf.x * scale;
+            let masterXOffset = Math.abs(ruufWidth - document.playgroudData.canvas.width) / 2;
+
+            let ruufHeight = document.playgroudData.ruuf.y * scale;
+            let masterYOffset = Math.abs(ruufHeight - document.playgroudData.canvas.height) / 2;
+
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.clearRect(0, 0, document.playgroudData.canvas.width, document.playgroudData.canvas.height);
+
+            ctx.strokeStyle = '#7e7e7e';
+            ctx.fillStyle = '#eeeeee';
+
+            ctx.rect(masterXOffset, masterYOffset, ruufWidth, ruufHeight);
+            ctx.fillRect(masterXOffset, masterYOffset, ruufWidth, ruufHeight);
+            ctx.stroke();
+
+            for (const i of document.playgroudData.packedPannels) {
+                ctx.fillStyle = '#ff000038';
+                ctx.strokeStyle = 'red';
+
+                if (i.r === 0) {
+                    ctx.fillRect(masterXOffset + i.x * scale, masterYOffset + i.y * scale, document.playgroudData.pannel.y * scale, document.playgroudData.pannel.x * scale);
+                    ctx.rect(masterXOffset + i.x * scale, masterYOffset + i.y * scale, document.playgroudData.pannel.y * scale, document.playgroudData.pannel.x * scale)
+                    ctx.stroke();
+                } else {
+                    ctx.fillRect(masterXOffset + i.x * scale, masterYOffset + i.y * scale, document.playgroudData.pannel.x * scale, document.playgroudData.pannel.y * scale);
+                    ctx.rect(masterXOffset + i.x * scale, masterYOffset + i.y * scale, document.playgroudData.pannel.x * scale, document.playgroudData.pannel.y * scale)
+                    ctx.stroke();
+                }
+            }
+        };
+
+        const calculatePannels = () => {
+            let packed_a = pseudoPackPannels(
+                document.playgroudData.ruuf,
+                document.playgroudData.pannel,
+                true
+            );
+            let packed_b = pseudoPackPannels(document.playgroudData.ruuf, {
+                x: document.playgroudData.pannel.y,
+                y: document.playgroudData.pannel.x,
+            });
+
+            document.playgroudData.packedPannels = packed_a.length > packed_b.length ? packed_a : packed_b;
+            display()
+        };
+
+        const pseudoPackPannels = (ruuf, pannel, flipOrientation) => {
+            let squaredRows = Math.floor(ruuf.x / pannel.x);
+            let squaredColumns = Math.floor(ruuf.y / pannel.y);
+
+            let placedPannels = [];
+            for (let i = 0; i < squaredRows; i++) {
+                for (let j = 0; j < squaredColumns; j++) {
+                    placedPannels.push({ x: i * pannel.x, y: j * pannel.y, r: flipOrientation ? 1 : 0 });
+                }
+            }
+
+            if (ruuf.x - squaredRows * pannel.x >= pannel.y) {
+                let startingAt = squaredRows * pannel.x;
+                let spaceLeftRow = ruuf.x - startingAt;
+
+                let extraRows = Math.floor(spaceLeftRow / pannel.y);
+                let extraColumns = Math.floor(ruuf.y / pannel.x);
+
+                for (let i = 0; i < extraRows; i++) {
+                    for (let j = 0; j < extraColumns; j++) {
+                        placedPannels.push({
+                            x: startingAt + i * pannel.y,
+                            y: j * pannel.x,
+                            r: flipOrientation ? 0 : 1,
+                        });
+                    }
+                }
+            } else if (ruuf.y - squaredColumns * pannel.y >= pannel.x) {
+                let startingAt = squaredColumns * pannel.y;
+                let spaceLeftCol = ruuf.y - startingAt;
+
+                let extraColumns = Math.floor(spaceLeftCol / pannel.x);
+                let extraRows = Math.floor(ruuf.x / pannel.y);
+
+                for (let i = 0; i < extraColumns; i++) {
+                    for (let j = 0; j < extraRows; j++) {
+                        placedPannels.push({
+                            x: j * pannel.y,
+                            y: startingAt + i * pannel.x,
+                            r: flipOrientation ? 0 : 1,
+                        });
+                    }
+                }
+            }
+
+            return placedPannels;
+        };
+
+        startup();
+
+    </script>
+</body>
+
+</html>

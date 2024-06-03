@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>ruuf_calculeitor</title>
+    <meta name="description" content="Calculadora de paneles solares por M2 de techo">
+    <meta name="author" content="Eros T">
+</head>
+
+<body style="   display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: center;
+                justify-content: space-evenly;
+                align-items: center;">
+
+    <div style="    display: flex;
+                    flex-direction: column;
+                    flex-wrap: nowrap;
+                    align-content: center;
+                    justify-content: center;
+                    align-items: flex-start;">
+
+
+        <label id='label_pannel_x' for="pannel_x">Ancho panel 10</label>
+        <input type="range" min="1" max="20" value="" id="pannel_x">
+        <label id='label_pannel_y' for="pannel_y">Largo panel 10</label>
+        <input type="range" min="1" max="20" value="" id="pannel_y">
+        <label id='label_ruuf_x' for="ruuf_x">Ancho techo 50</label>
+        <input type="range" min="1" max="100" value="" id="ruuf_x">
+        <label id='label_ruuf_y' for="ruuf_y">Largo techo 50</label>
+        <input type="range" min="1" max="100" value="" id="ruuf_y">
+    </div>
+
+    <canvas id="canvas" width="1000" height="1000" style="border:1px solid lightgrey;">
+        Your browser does not support the HTML5 canvas tag.
+    </canvas>
+    <script>
+
+
+        startup();
+
+    </script>
+</body>
+
+</html>
